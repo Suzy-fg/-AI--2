@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高中物理 AI 智慧解題助手</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        physics: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                            950: '#0f172a',
+                        },
+                        neon: {
+                            blue: '#06b6d4',
+                            indigo: '#6366f1',
+                            pink: '#ec4899',
+                        }
+                    },
+                    boxShadow: {
+                        'glow-indigo': '0 0 20px rgba(99, 102, 241, 0.25)',
+                        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.25)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- MathJax for rendering physics equations -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Smooth transitions */
+        .transition-all-300 {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Custom scrollbar for premium theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* MathJax Custom Styling to avoid line breaks within inline formulas */
+        mjx-container {
+            display: inline-block !important;
+            margin: 0 0.15em !important;
+            vertical-align: middle !important;
+            white-space: nowrap !important;
+        }
+        mjx-container[display="true"] {
+            display: block !important;
+            white-space: normal !important;
+            margin: 1em 0 !important;
+        }
+        /* Glow background animation */
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(10px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(10px) rotate(-360deg); }
+        }
+        .physics-glow {
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: orbit 12s infinite linear;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden relative">
+
+    <!-- Ambient background glows for professional atmosphere -->
+    <div class="absolute top-10 left-10 w-72 h-72 bg-indigo-600 rounded-full physics-glow pointer-events-none"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-cyan-600 rounded-full physics-glow pointer-events-none" style="animation-duration: 18s; animation-direction: reverse;"></div>
+
+    <div class="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen relative z-10">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row items-center justify-between border-b border-slate-800/80 pb-6 mb-8 gap-4">
+            <div class="flex items-center gap-4">
+                <div class="relative w-12 h-12 bg-gradient-to-tr from-indigo-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-glow-indigo">
+                    <i data-lucide="atom" class="w-8 h-8 text-white animate-spin" style="animation-duration: 8s;"></i>
+                    <div class="absolute inset-0 bg-white/20 rounded-2xl blur-sm scale-105 pointer-events-none"></div>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                        高中物理 AI 智慧解題助手
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1 flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        整合 Gemini 2.5 Flash • 物理公式精緻排版 • 防斷行技術
+                    </p>
+                </div>
+            </div>
+            
+            <!-- API Key Status / Model Indicator -->
+            <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5 shadow-xl backdrop-blur-md">
+                <div class="w-3 h-3 rounded-full bg-cyan-500 animate-ping"></div>
+                <span class="text-xs font-semibold text-cyan-400 tracking-wider uppercase">Gemini-2.5-Flash</span>
+                <div class="h-4 w-[1px] bg-slate-800"></div>
+                <span class="text-xs text-slate-400">科學解答引擎</span>
+            </div>
+        </header>
+
+        <!-- Main Layout Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1">
+            
+            <!-- LEFT PANEL: Problem Inputs & Tools (Width: 5 cols on lg) -->
+            <section class="lg:col-span-5 flex flex-col gap-6">
+                
+                <!-- Problem Input Card -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-md flex flex-col gap-5 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+                    
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="help-circle" class="w-5 h-5 text-indigo-400"></i>
+                            輸入物理題目
+                        </h2>
+                        <button onclick="clearInput()" class="text-xs text-slate-400 hover:text-rose-400 transition-all-300 flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-800">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            清空
+                        </button>
+                    </div>
+
+                    <!-- Input Methods Tabs -->
+                    <div>
+                        <!-- Text Input Area -->
+                        <textarea id="problem-text" rows="5" class="w-full bg-slate-950/95 border border-slate-800 focus:border-indigo-500 rounded-2xl p-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm transition-all-300 resize-none font-sans leading-relaxed" placeholder="請在此輸入物理題目的文字描述... (例如：一物體自高度 20 公尺處自由落下，求落地時的瞬時速度為多少 m/s？不計空氣阻力，g = 10 m/s²)"></textarea>
+
+                        <!-- Photo Upload & Preview Container -->
+                        <div class="mt-4">
+                            <div id="drop-zone" class="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 hover:bg-slate-950/20 rounded-2xl p-4 text-center cursor-pointer transition-all-300 relative group/upload">
+                                <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                                <div id="upload-prompt" class="flex flex-col items-center justify-center py-2">
+                                    <i data-lucide="image" class="w-8 h-8 text-slate-400 group-hover/upload:text-indigo-400 group-hover/upload:scale-110 transition-all-300 mb-2"></i>
+                                    <p class="text-sm text-slate-300 font-medium">拖曳或上傳題目照片</p>
+                                    <p class="text-xs text-slate-500 mt-1">支援 PNG, JPG (AI 可自動辨識影像中的手寫或排版題目)</p>
+                                </div>
+                                
+                                <!-- Preview Pane -->
+                                <div id="image-preview-container" class="hidden relative rounded-xl overflow-hidden max-h-48 border border-slate-800">
+                                    <img id="image-preview" src="#" alt="題目預覽" class="w-full h-full object-contain bg-slate-950">
+                                    <button onclick="removeImage(event)" class="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 text-white p-1.5 rounded-full backdrop-blur-sm transition-all-300 shadow-lg">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button id="solve-btn" onclick="startSolving()" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold py-3.5 px-6 rounded-2xl shadow-glow-indigo hover:shadow-glow-cyan transform hover:scale-[1.015] active:scale-[0.985] transition-all-300 flex items-center justify-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span>送出給 AI 逐步解析</span>
+                    </button>
+                </div>
+
+                <!-- AI Quick Quiz Generator Module (隨堂出題) -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-md flex flex-col gap-4 relative overflow-hidden">
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <i data-lucide="award" class="w-5 h-5 text-cyan-400"></i>
+                        AI 隨堂自主出題器
+                    </h2>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">選擇物理範圍</label>
+                            <select id="quiz-range" class="w-full bg-slate-950 border border-slate-850 rounded-xl px-2 py-2 text-[10px] text-slate-200 focus:outline-none focus:border-cyan-500">
+                                <option value="直線運動與落體">直線運動與落體</option>
+                                <option value="牛頓運動定律與摩擦力">牛頓定律與摩擦力</option>
+                                <option value="功與能量、力學能守恆">功與能量、力學能</option>
+                                <option value="動量守恆與碰撞">動量守恆與碰撞</option>
+                                <option value="靜電學與庫侖定律">靜電學與庫侖定律</option>
+                                <option value="光電效應與近代物理">光電效應與近代物理</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">選擇期望題型</label>
+                            <select id="quiz-type" class="w-full bg-slate-950 border border-slate-850 rounded-xl px-2 py-2 text-[10px] text-slate-200 focus:outline-none focus:border-cyan-500">
+                                <option value="單一選擇題">單一選擇題</option>
+                                <option value="非選擇計算題">非選擇計算題</option>
+                                <option value="是非題">是非題</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">期望難易度</label>
+                            <select id="quiz-difficulty" class="w-full bg-slate-950 border border-slate-850 rounded-xl px-2 py-2 text-[10px] text-slate-200 focus:outline-none focus:border-cyan-500">
+                                <option value="簡單">簡單 🟢</option>
+                                <option value="適中" selected>適中 🟡</option>
+                                <option value="困難">困難 🔴</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="generate-quiz-btn" onclick="generateQuiz()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium py-2.5 px-4 rounded-xl border border-slate-700 transition-all-300 flex items-center justify-center gap-2 text-xs">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
+                        AI 自動生成全新題目
+                    </button>
+                </div>
+
+                <!-- Demonstration Examples Gallery -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-md flex flex-col gap-4">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-indigo-400"></i>
+                        精選高中物理範例庫 (點擊一鍵帶入)
+                    </h2>
+                    <div class="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                        <button onclick="loadExample(0)" class="w-full text-left bg-slate-950/50 hover:bg-slate-950 border border-slate-800/60 hover:border-indigo-500/30 p-3 rounded-xl transition-all-300 text-xs flex flex-col gap-1">
+                            <span class="font-bold text-indigo-300 flex items-center gap-1">【力學】斜面運動與摩擦力</span>
+                            <span class="text-slate-400 truncate">一個質量為 5 kg 的木塊在傾角 37 度的粗糙斜面上以 2 m/s² 減速下滑...</span>
+                        </button>
+                        <button onclick="loadExample(1)" class="w-full text-left bg-slate-950/50 hover:bg-slate-950 border border-slate-800/60 hover:border-indigo-500/30 p-3 rounded-xl transition-all-300 text-xs flex flex-col gap-1">
+                            <span class="font-bold text-cyan-300 flex items-center gap-1">【電磁學】靜電力三電荷平衡</span>
+                            <span class="text-slate-400 truncate">兩個固定點電荷 A (+4Q) 與 B (+Q) 相距 L，在兩電荷連線中點置入...</span>
+                        </button>
+                        <button onclick="loadExample(2)" class="w-full text-left bg-slate-950/50 hover:bg-slate-950 border border-slate-800/60 hover:border-indigo-500/30 p-3 rounded-xl transition-all-300 text-xs flex flex-col gap-1">
+                            <span class="font-bold text-teal-300 flex items-center gap-1">【波動】簡諧運動週期推導</span>
+                            <span class="text-slate-400 truncate">一輕彈簧常數為 k，下端懸掛一個質量為 m 的物體，將物體向下拉 5 cm...</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-md flex flex-col gap-4">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 text-cyan-400"></i>
+                        解題歷史紀錄 (Session)
+                    </h2>
+                    <div id="history-container" class="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                        <p class="text-xs text-slate-500 text-center py-4">目前尚無歷史解題紀錄</p>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- RIGHT PANEL: Solutions & Analysis (Width: 7 cols on lg) -->
+            <section class="lg:col-span-7 flex flex-col gap-6">
+                
+                <!-- Welcome/State Placeholder Card -->
+                <div id="welcome-placeholder" class="bg-slate-900/40 border border-slate-800/50 rounded-3xl p-12 text-center shadow-2xl backdrop-blur-md flex-1 flex flex-col items-center justify-center min-h-[450px]">
+                    <div class="w-20 h-20 bg-slate-950 border border-slate-850 rounded-3xl flex items-center justify-center mb-6 shadow-xl relative animate-bounce" style="animation-duration: 3s;">
+                        <i data-lucide="calculator" class="w-10 h-10 text-indigo-400"></i>
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 rounded-full animate-ping"></div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white">等待解析物理題目</h3>
+                    <p class="text-sm text-slate-400 max-w-md leading-relaxed">
+                        您可以在左側手寫輸入題目文字、上傳考卷照片，或者直接使用「AI 隨堂出題」和「精選範例庫」一鍵體驗。AI 將為您展現完美的 LaTeX 公式逐步推導。
+                    </p>
+                </div>
+
+                <!-- Loading Spinner Card -->
+                <div id="loading-card" class="hidden bg-slate-900/80 border border-slate-800/80 rounded-3xl p-12 text-center shadow-2xl backdrop-blur-md flex-1 flex flex-col items-center justify-center min-h-[450px]">
+                    <div class="relative w-20 h-20 mb-6">
+                        <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-cyan-500 animate-spin"></div>
+                        <i data-lucide="cpu" class="w-8 h-8 text-cyan-400 absolute inset-0 m-auto animate-pulse"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2" id="loading-title">AI 科學解答引擎高速運算中...</h3>
+                    <p class="text-sm text-slate-400 max-w-sm leading-relaxed" id="loading-desc">
+                        正在識別照片題目、推導核心物理定理、設計相似題組與轉換 LaTeX 數學格式，請稍候。
+                    </p>
+                </div>
+
+                <!-- Solver Result Card (Main output) -->
+                <div id="result-card" class="hidden flex flex-col gap-6">
+                    
+                    <!-- Solution Area Card -->
+                    <div class="bg-slate-900/90 border border-indigo-500/30 rounded-3xl p-6 md:p-8 shadow-glow-indigo backdrop-blur-md flex flex-col gap-6 relative">
+                        <!-- Floating Corrections Button -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                            <span class="text-xs font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                                本題逐步解析結果
+                            </span>
+                            <button onclick="openCorrectionModal()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all-300 flex items-center gap-1.5 shadow-md">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                覺得算錯？讓 AI 修正重算
+                            </button>
+                        </div>
+
+                        <!-- Displaying original problem -->
+                        <div class="bg-slate-950/70 border border-slate-850 p-4 rounded-2xl">
+                            <h4 class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1.5">題目原文 / 辨識結果</h4>
+                            <p id="result-original-question" class="text-sm text-slate-200 leading-relaxed"></p>
+                        </div>
+
+                        <!-- Displaying step-by-step solution -->
+                        <div class="flex flex-col gap-6">
+                            <h4 class="text-sm font-bold text-slate-300 flex items-center gap-1.5">
+                                <i data-lucide="list-ordered" class="w-4 h-4 text-indigo-400"></i>
+                                詳細推導與解題步驟
+                            </h4>
+                            <div id="solution-steps-container" class="flex flex-col gap-4 text-slate-200">
+                                <!-- Steps populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Displaying final answer -->
+                        <div class="bg-gradient-to-r from-indigo-950/60 to-cyan-950/60 border border-indigo-500/20 rounded-2xl p-5 flex items-center justify-between">
+                            <div>
+                                <h4 class="text-xs text-indigo-300 uppercase font-bold tracking-wider mb-1">最終求解結論</h4>
+                                <div id="result-final-answer" class="text-xl font-extrabold text-white leading-tight"></div>
+                            </div>
+                            <div class="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 shadow-inner">
+                                <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <!-- Concept and Chapter Tags -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-800 pt-5">
+                            <div class="flex flex-col gap-2">
+                                <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">對應高中物理單元章節</span>
+                                <div id="result-chapters" class="flex flex-wrap gap-2">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">解題必備核心物理概念</span>
+                                <div id="result-concepts" class="flex flex-wrap gap-2">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW SECTION: One-on-one Follow-up Q&A Chatroom -->
+                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-md flex flex-col gap-4 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                        
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="messages-square" class="w-5 h-5 text-cyan-400"></i>
+                                <h3 class="text-base font-bold text-white">一對一課堂追問 (AI 物理導師)</h3>
+                            </div>
+                            <button onclick="clearQAChat()" class="text-[11px] text-slate-500 hover:text-slate-300 transition-all-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-850">
+                                <i data-lucide="refresh-ccw" class="w-3 h-3"></i> 重置追問
+                            </button>
+                        </div>
+                        
+                        <!-- Chat message container -->
+                        <div id="qa-chat-container" class="flex flex-col gap-4 max-h-[350px] overflow-y-auto pr-1 min-h-[100px] bg-slate-950/40 rounded-2xl p-4 border border-slate-850">
+                            <div id="qa-placeholder-msg" class="text-center py-8 text-xs text-slate-500 flex flex-col items-center gap-2">
+                                <i data-lucide="help-circle" class="w-8 h-8 text-slate-600"></i>
+                                <span>對此題推導、公式有任何疑問？在下方輸入，AI 物理導師將會為您解讀。</span>
+                            </div>
+                            <!-- Messages get appended here -->
+                        </div>
+
+                        <!-- Chat Input Box -->
+                        <div class="flex gap-2">
+                            <input type="text" id="qa-input-field" onkeypress="handleQAPress(event)" class="flex-1 bg-slate-950 border border-slate-850 focus:border-cyan-500 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all-300" placeholder="例如：為什麼步驟一的受力平衡不用計入摩擦力？">
+                            <button id="qa-submit-btn" onclick="sendQAQuestion()" class="bg-cyan-600/25 hover:bg-cyan-600/40 text-cyan-400 border border-cyan-500/30 hover:text-cyan-300 px-5 rounded-xl font-semibold text-xs transition-all-300 flex items-center gap-2 shadow-lg">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span>追問</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Extension and Similar Questions Card -->
+                    <div class="bg-slate-900/80 border border-slate-850 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-md flex flex-col gap-5">
+                        
+                        <!-- Similar Question Header with Difficulty Switcher -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shuffle" class="w-5 h-5 text-cyan-400"></i>
+                                <h3 class="text-base font-bold text-white">延伸練習與相似題組</h3>
+                            </div>
+                            <!-- Difficulty Selector -->
+                            <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-850">
+                                <button onclick="changeDifficulty('easy')" id="diff-easy" class="px-3 py-1 rounded-lg text-xs font-medium transition-all-300 text-slate-400 hover:text-slate-100">
+                                    簡單
+                                </button>
+                                <button onclick="changeDifficulty('normal')" id="diff-normal" class="px-3 py-1 rounded-lg text-xs font-medium transition-all-300 bg-slate-800 text-cyan-400 shadow">
+                                    適中
+                                </button>
+                                <button onclick="changeDifficulty('hard')" id="diff-hard" class="px-3 py-1 rounded-lg text-xs font-medium transition-all-300 text-slate-400 hover:text-slate-100">
+                                    困難
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Displaying similar question -->
+                        <div class="flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                    AI 自動設計類似題組
+                                </span>
+                                <span id="current-diff-tag" class="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800 font-bold uppercase">難度：適中</span>
+                            </div>
+                            <p id="similar-question-text" class="text-sm text-slate-200 leading-relaxed bg-slate-950/50 p-4 rounded-2xl border border-slate-850"></p>
+                            <p class="text-xs text-slate-400 italic" id="similar-concept-text"></p>
+                        </div>
+
+                        <!-- Toggle Answer Collapse -->
+                        <div class="border-t border-slate-800/80 pt-4 flex flex-col gap-3">
+                            <button onclick="toggleSimilarAnswer()" class="flex items-center justify-between w-full bg-slate-950 hover:bg-slate-950/80 border border-slate-850 p-4 rounded-xl transition-all-300">
+                                <span class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                                    <i data-lucide="eye" class="w-4 h-4 text-cyan-400"></i>
+                                    展開類似題解析與解答
+                                </span>
+                                <i data-lucide="chevron-down" id="similar-toggle-icon" class="w-4 h-4 text-slate-400 transition-all-300"></i>
+                            </button>
+                            
+                            <!-- Similar Answer Body -->
+                            <div id="similar-answer-panel" class="hidden bg-slate-950/60 p-5 rounded-xl border border-slate-850 flex flex-col gap-4">
+                                <div>
+                                    <h4 class="text-xs text-cyan-400 uppercase font-bold tracking-wider mb-2">解析推導：</h4>
+                                    <p id="similar-steps-text" class="text-sm text-slate-300 leading-relaxed"></p>
+                                </div>
+                                <div class="bg-cyan-950/40 border border-cyan-500/20 p-3.5 rounded-lg">
+                                    <h4 class="text-xs text-cyan-300 uppercase font-bold tracking-wider mb-1">參考答案：</h4>
+                                    <p id="similar-answer-text" class="text-sm font-bold text-white"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- CORRECTION MODAL (For prompt correction recalculation) -->
+    <div id="correction-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all-300">
+        <div class="bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 max-w-lg w-full shadow-glow-indigo flex flex-col gap-5 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 text-amber-400 animate-spin" style="animation-duration: 4s;"></i>
+                    引導 AI 重新計算
+                </h3>
+                <button onclick="closeCorrectionModal()" class="text-slate-400 hover:text-white transition-all-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                若物理 AI 在公式代入、正負號推導或常數上有誤，請在這裡給予更精準的提示（例如：「重力加速度請代 9.8 m/s²」或「摩擦力作功為負值，請重算第二步」），AI 將會針對提示重新解算。
+            </p>
+            <textarea id="correction-prompt" rows="3" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-600 focus:ring-1 focus:ring-indigo-500" placeholder="在此輸入補充指示或提示修正..."></textarea>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button onclick="closeCorrectionModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 border border-slate-800 transition-all-300">
+                    取消
+                </button>
+                <button onclick="submitCorrection()" class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-all-300 shadow-glow-indigo">
+                    送出提示並重算
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-indigo-500/30 px-5 py-3 rounded-2xl shadow-glow-indigo flex items-center gap-3 transition-all-300 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <i data-lucide="info" class="w-5 h-5 text-indigo-400" id="toast-icon"></i>
+        <span class="text-sm text-slate-200" id="toast-text">通知訊息</span>
+    </div>
+
+    <!-- Script Block containing logical engine -->
+    <script>
+        // State variables
+        const apiKey = ""; // Canvas runtime injection handled automatically
+        let currentImageBase64 = null;
+        let currentDifficulty = "normal";
+        let activeSolveData = null; // Store active original question to regenerate similar questions easily
+        let qasHistory = []; // Keeps track of QAs for current question
+        const historyList = [];
+
+        // Sample physics questions for quick preview demo
+        const examples = [
+            {
+                text: "一個質量為 5 kg 的木塊在傾角 37 度的粗糙斜面上以 2 m/s² 的等加速度自靜止下滑，求此斜面的動摩擦係數為多少？（不計空氣阻力，g = 10 m/s²，sin 37° = 0.6，cos 37° = 0.8）",
+                image: null
+            },
+            {
+                text: "兩個固定點電荷 A (+4Q) 與 B (+Q) 在真空中相距 L，若在兩電荷連線上放進一個帶有電荷 +q 的自由電荷 C，使其恰能保持靜止平衡，則電荷 C 的放置位置距離電荷 A 應該是多少距離？",
+                image: null
+            },
+            {
+                text: "一輕彈簧常數為 k，下端懸掛一個質量為 m 的物體，將物體向下拉動 5 cm 處後釋放，使其作簡諧運動（SHM）。試推導其運動週期 T 為多少？若質量改為 4m，其週期與振幅會如何變化？",
+                image: null
+            }
+        ];
+
+        // Initialize icons on DOM load
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            initDragAndDrop();
+        });
+
+        // Smart LaTeX repair function to combat string/escape issues like "ext{}" or "rac{}"
+        function smartLatexRepair(jsonStr) {
+            let processed = jsonStr;
+            
+            // 1. Repair mangled latex due to backslash stripping (e.g. \text -> tab+ext -> 'ext' or '	ext')
+            // Match any instance of text{, frac{, mu, theta, alpha, beta, degree, etc.
+            // Often "ext{" is a victim of \text -> \t + ext. We replace it with \\text{
+            processed = processed.replace(/([^a-zA-Z\\])ext\{/g, '$1\\\\text{');
+            processed = processed.replace(/^ext\{/g, '\\\\text{');
+
+            processed = processed.replace(/([^a-zA-Z\\])rac\{/g, '$1\\\\frac{');
+            processed = processed.replace(/^rac\{/g, '\\\\frac{');
+
+            processed = processed.replace(/([^a-zA-Z\\])theta/g, '$1\\\\theta');
+            processed = processed.replace(/([^a-zA-Z\\])mu/g, '$1\\\\mu');
+            processed = processed.replace(/([^a-zA-Z\\])cdot/g, '$1\\\\cdot');
+            processed = processed.replace(/([^a-zA-Z\\])times/g, '$1\\\\times');
+            processed = processed.replace(/([^a-zA-Z\\])pi/g, '$1\\\\pi');
+            processed = processed.replace(/([^a-zA-Z\\])degree/g, '$1\\\\degree');
+
+            // 2. Double backslashes if they are not already escaped so the JSON.parse handles them cleanly
+            // Specifically look for unescaped \
+            // We want to replace single \ with double \\ except valid JSON escape sequences
+            // For safety and reliability, we can do a targeted regex replacing \ before LaTeX commands
+            const latexKeywords = ['text', 'frac', 'theta', 'mu', 'times', 'cdot', 'pi', 'alpha', 'beta', 'lambda', 'degree', 'Delta', 'omega', 'phi', 'rho', 'sqrt', 'approx'];
+            latexKeywords.forEach(keyword => {
+                const regex = new RegExp(`([^\\\\])\\\\${keyword}\\b`, 'g');
+                processed = processed.replace(regex, `$1\\\\\\\\${keyword}`);
+                
+                // At beginning
+                const startRegex = new RegExp(`^\\\\${keyword}\\b`, 'g');
+                processed = processed.replace(startRegex, `\\\\\\\\${keyword}`);
+            });
+
+            return processed;
+        }
+
+        // Safe JSON Parser
+        function safeJsonParse(rawText) {
+            let cleanedText = rawText.trim();
+            
+            // Strip potential markdown markers
+            if (cleanedText.startsWith("```json")) {
+                cleanedText = cleanedText.substring(7);
+            } else if (cleanedText.startsWith("```")) {
+                cleanedText = cleanedText.substring(3);
+            }
+            if (cleanedText.endsWith("```")) {
+                cleanedText = cleanedText.substring(0, cleanedText.length - 3);
+            }
+            cleanedText = cleanedText.trim();
+
+            // Run smart repair engine
+            cleanedText = smartLatexRepair(cleanedText);
+
+            try {
+                return JSON.parse(cleanedText);
+            } catch (e) {
+                console.warn("JSON.parse normal execution failed, attempting secondary heuristic parser:", e);
+                // Attempt to fix double escape issues that might cause parse failure
+                try {
+                    // Try parsing with single backslashes replaced to double globally
+                    let secondaryClean = cleanedText.replace(/\\/g, '\\\\');
+                    // Undo double escape on valid controls like \"
+                    secondaryClean = secondaryClean.replace(/\\\\"/g, '\\"');
+                    return JSON.parse(secondaryClean);
+                } catch (secondaryErr) {
+                    throw new Error("無法解析 AI 的科學解答格式。請點擊重新計算。");
+                }
+            }
+        }
+
+        // Show Toast Notification
+        function showToast(text, iconName = "info", duration = 4000) {
+            const toast = document.getElementById("toast");
+            const toastText = document.getElementById("toast-text");
+            const toastIcon = document.getElementById("toast-icon");
+            
+            toastText.textContent = text;
+            toastIcon.setAttribute("data-lucide", iconName);
+            lucide.createIcons();
+            
+            toast.classList.remove("hidden");
+            
+            setTimeout(() => {
+                toast.classList.add("hidden");
+            }, duration);
+        }
+
+        // Clear Inputs
+        function clearInput() {
+            document.getElementById("problem-text").value = "";
+            removeImage(null);
+            showToast("已清空所有輸入內容", "trash-2");
+        }
+
+        // Load Example Question
+        function loadExample(index) {
+            const ex = examples[index];
+            document.getElementById("problem-text").value = ex.text;
+            removeImage(null);
+            showToast("已載入精選高中物理範例！", "book-open");
+        }
+
+        // Handle Image Select
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            processImage(file);
+        }
+
+        // Process file and convert to Base64
+        function processImage(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast("僅支援上傳影像/照片檔案", "alert-circle");
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImageBase64 = e.target.result.split(',')[1];
+                
+                document.getElementById("upload-prompt").classList.add("hidden");
+                const previewContainer = document.getElementById("image-preview-container");
+                const previewImg = document.getElementById("image-preview");
+                
+                previewImg.src = e.target.result;
+                previewContainer.classList.remove("hidden");
+                showToast("考卷或題目影像上傳成功！", "image");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove Selected Image
+        function removeImage(event) {
+            if (event) event.stopPropagation();
+            currentImageBase64 = null;
+            document.getElementById("file-input").value = "";
+            document.getElementById("image-preview-container").classList.add("hidden");
+            document.getElementById("upload-prompt").classList.remove("hidden");
+        }
+
+        // Setup Drag & Drop
+        function initDragAndDrop() {
+            const dropZone = document.getElementById("drop-zone");
+            
+            dropZone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                dropZone.classList.add("border-indigo-500", "bg-slate-950/40");
+            });
+            
+            dropZone.addEventListener("dragleave", () => {
+                dropZone.classList.remove("border-indigo-500", "bg-slate-950/40");
+            });
+            
+            dropZone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                dropZone.classList.remove("border-indigo-500", "bg-slate-950/40");
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    processImage(file);
+                }
+            });
+            
+            dropZone.addEventListener("click", () => {
+                document.getElementById("file-input").click();
+            });
+        }
+
+        // Call Gemini 2.5 Flash with exponential backoff
+        async function fetchGeminiWithBackoff(payload, retries = 5, delay = 1000) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                } catch (e) {
+                    // Fail silently for exponential backoff retry loop
+                }
+                
+                // Wait for exponential backoff delay before next try
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+            throw new Error("科學解答伺服器忙碌中或連接超時，請稍後重試。");
+        }
+
+        // Main solving flow
+        async function startSolving() {
+            const problemText = document.getElementById("problem-text").value.trim();
+            
+            if (!problemText && !currentImageBase64) {
+                showToast("請輸入題目描述文字或上傳題目照片", "alert-circle");
+                return;
+            }
+
+            // Show loading state
+            document.getElementById("welcome-placeholder").classList.add("hidden");
+            document.getElementById("result-card").classList.add("hidden");
+            document.getElementById("loading-card").classList.remove("hidden");
+            document.getElementById("loading-title").textContent = "AI 科學解答引擎高速運算中...";
+            document.getElementById("loading-desc").textContent = "正在識別照片題目、推導核心物理定理、設計相似題組與轉換 LaTeX 數學格式，請稍候。";
+
+            // Clear QA history on new problem solve
+            clearQAChat();
+
+            try {
+                // Construct prompt
+                const systemPrompt = `你是一個頂尖的高中物理老師與科學解題助手。
+你的目標是幫學生解析物理問題。
+請遵循以下規則：
+1. 逐步詳細說明每個物理推導、公式公式與代入。
+2. 計算物理答案。
+3. 對應台灣高中物理課綱的單元章節。
+4. 整理核心觀念。
+5. 生成一題難度適中（normal）的物理類似延伸練習題（包含題目、主要觀念、推導步驟、答案）。
+
+重要 - 防止 LaTeX 單位及公式轉義毀損：
+- 為了使 MathJax 在 HTML 中正確解析公式且絕不換行，當在 JSON 中撰寫 LaTeX 符號與指令（例如 text, frac, theta, mu, times, degree 等）時，必須將反斜線進行雙重或四重轉義：
+  * 使用 "\\\\text{ m/s}^2" 而不是 "\text{m/s}^2"、"\\text" 或 "\text"。
+  * 使用 "\\\\frac{a}{b}" 而不是 "\frac{a}{b}"。
+  * 必須避免使用會造成 unicode 解析錯誤的簡化寫法。
+- 絕對不要寫單一反斜線，這會被 JSON 解析器拆毀成 ext、rac、heta 等而導致公式失效！
+- 物理變數和單位，可以用標準 $ 符號包覆行內公式，例如 $F = ma$、$g = 10 \\\\text{ m/s}^2$。
+- 請多使用行內公式，並避免公式內部出現非預期折行。`;
+
+                const userPrompt = `
+物理問題描述與要求如下：
+${problemText ? `題目文字：\n"${problemText}"\n` : ""}
+${currentImageBase64 ? "（請結合上傳的物理考題圖片內容進行辨識解題）" : ""}
+
+請用繁體中文，依照下列 JSON 綱要 (Schema) 返回解答結構：
+{
+  "original_question_analysis": "辨識/提取出的題目完整描述、常量等細節",
+  "steps": [
+    {
+      "title": "步驟階段標題（如：分析受力、代入牛頓定律、數值計算等）",
+      "content": "詳細的推導與物理公式內容。所有公式請用雙重轉義的 $ 符號包覆 LaTeX，例如：$F = m \\\\cdot a$"
+    }
+  ],
+  "final_answer": "最終簡短明確的答案（加單位，如 $10 \\\\text{ m/s}^2$）",
+  "chapters": ["對應的高中物理單元章節名稱"],
+  "concepts": ["核心物理觀念"],
+  "similar_question": {
+    "question": "全新設計的類似題，難度為：適中",
+    "concept_required": "本類似題所屬的核心定理",
+    "steps": "類似題的逐步解題推導步驟 (請完全使用 LaTeX)",
+    "answer": "類似題最終答案"
+  }
+};
+請絕對嚴格輸出合法的 JSON，不要夾帶任何其他文字，也不要省略 JSON Key。`;
+
+                // Set up payload
+                const payload = {
+                    contents: [{
+                        parts: []
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                // Add image if exists
+                if (currentImageBase64) {
+                    payload.contents[0].parts.push({
+                        inlineData: {
+                            mimeType: "image/png",
+                            data: currentImageBase64
+                        }
+                    });
+                }
+
+                // Add text prompt
+                payload.contents[0].parts.push({
+                    text: userPrompt
+                });
+
+                // Call Gemini
+                const result = await fetchGeminiWithBackoff(payload);
+                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!responseText) {
+                    throw new Error("無法從 AI 解題引擎獲得回應內容。");
+                }
+
+                // Parse and Render
+                const parsedData = safeJsonParse(responseText);
+                activeSolveData = parsedData; // Save to memory
+                renderSolution(parsedData);
+                
+                // Add to history
+                addToHistory(parsedData);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById("loading-card").classList.add("hidden");
+                document.getElementById("welcome-placeholder").classList.remove("hidden");
+                showToast(error.message || "發生未知錯誤，請檢驗連線", "alert-triangle");
+            }
+        }
+
+        // Render response data to UI
+        function renderSolution(data) {
+            document.getElementById("loading-card").classList.add("hidden");
+            const resultCard = document.getElementById("result-card");
+            resultCard.classList.remove("hidden");
+
+            // Fill Original Question
+            document.getElementById("result-original-question").innerHTML = data.original_question_analysis;
+
+            // Fill Steps
+            const stepsContainer = document.getElementById("solution-steps-container");
+            stepsContainer.innerHTML = "";
+            data.steps.forEach((step, idx) => {
+                const stepDiv = document.createElement("div");
+                stepDiv.className = "bg-slate-950/40 border border-slate-850 p-4 rounded-2xl flex flex-col gap-2";
+                stepDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 text-xs font-bold flex items-center justify-center border border-indigo-500/30">${idx + 1}</span>
+                        <h5 class="text-xs font-bold text-slate-300">${step.title}</h5>
+                    </div>
+                    <p class="text-sm text-slate-200 leading-relaxed pl-7 select-text">${step.content}</p>
+                `;
+                stepsContainer.appendChild(stepDiv);
+            });
+
+            // Fill Final Answer
+            document.getElementById("result-final-answer").innerHTML = data.final_answer;
+
+            // Fill Chapters & Concepts
+            const chaptersContainer = document.getElementById("result-chapters");
+            chaptersContainer.innerHTML = "";
+            data.chapters.forEach(ch => {
+                const span = document.createElement("span");
+                span.className = "text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-3 py-1 rounded-xl font-medium";
+                span.textContent = ch;
+                chaptersContainer.appendChild(span);
+            });
+
+            const conceptsContainer = document.getElementById("result-concepts");
+            conceptsContainer.innerHTML = "";
+            data.concepts.forEach(con => {
+                const span = document.createElement("span");
+                span.className = "text-xs bg-slate-800 text-cyan-300 border border-slate-700 px-3 py-1 rounded-xl font-medium";
+                span.textContent = con;
+                conceptsContainer.appendChild(span);
+            });
+
+            // Fill Similar Question
+            currentDifficulty = "normal";
+            updateDiffButtonsUI();
+            renderSimilarQuestion(data.similar_question);
+
+            // Trigger MathJax Typesetting to beautifully format math
+            if (window.MathJax) {
+                MathJax.typesetPromise([resultCard]).then(() => {
+                    // MathJax render done
+                }).catch((err) => console.error("MathJax typeset error:", err));
+            }
+        }
+
+        // Render similar question block only
+        function renderSimilarQuestion(simData) {
+            document.getElementById("similar-question-text").innerHTML = simData.question;
+            document.getElementById("similar-concept-text").innerHTML = `💡 必備知識概念：${simData.concept_required}`;
+            document.getElementById("similar-steps-text").innerHTML = simData.steps;
+            document.getElementById("similar-answer-text").innerHTML = simData.answer;
+
+            // Auto-collapse answers on reload
+            const panel = document.getElementById("similar-answer-panel");
+            const icon = document.getElementById("similar-toggle-icon");
+            panel.classList.add("hidden");
+            icon.classList.remove("rotate-180");
+        }
+
+        // Toggle collapsible answers
+        function toggleSimilarAnswer() {
+            const panel = document.getElementById("similar-answer-panel");
+            const icon = document.getElementById("similar-toggle-icon");
+            
+            if (panel.classList.contains("hidden")) {
+                panel.classList.remove("hidden");
+                icon.classList.add("rotate-180");
+            } else {
+                panel.classList.add("hidden");
+                icon.classList.remove("rotate-180");
+            }
+        }
+
+        // Handle difficulty changing
+        async function changeDifficulty(level) {
+            if (currentDifficulty === level) return;
+            currentDifficulty = level;
+            updateDiffButtonsUI();
+
+            if (!activeSolveData) return;
+
+            showToast(`正在重新生成難度為 [${translateLevel(level)}] 的延伸練習類似題...`, "loader", 3000);
+
+            // Construct regeneration prompt
+            const prompt = `
+            根據剛才解答的這道物理題目：
+            "${activeSolveData.original_question_analysis}"
+            
+            對應的核心概念為：${activeSolveData.concepts.join(", ")}
+            
+            請重新為高中生量身設計一題物理「類似題組/延伸練習」，這次要求的難度級別為：【${translateLevel(level)}】
+            請依照下列 JSON Schema 返回：
+            {
+                "question": "在此填入全新的類似題題目描述。題目難度必須符合【${translateLevel(level)}】。如果是困難，可以結合多重物理程序（如碰撞後滑行），如果是簡單，著重單一公式基礎代入。",
+                "concept_required": "解此題需要的核心物理定理與定律",
+                "steps": "該類似題的精確 LaTeX 逐步解答推導過程。請注意：LaTeX 反斜線在 JSON 中務必進行雙重或四重轉義，例如用 \\\\text{ m/s}^2 絕對不要直接寫 \\text",
+                "answer": "最終參考答案"
+            }
+            請嚴格只輸出 JSON，其餘都不用寫。`;
+
+            try {
+                const systemPrompt = `你是一個極度嚴格的高中物理命題大師。請雙重轉義 JSON 中的 LaTeX 反斜線（如 \\\\text{ N}），絕不直接輸出單反斜線，否則 JSON 會解析失敗。`;
+                const payload = {
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const result = await fetchGeminiWithBackoff(payload);
+                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!responseText) throw new Error("類似題重新出題失敗");
+
+                const newSimilarData = safeJsonParse(responseText);
+                renderSimilarQuestion(newSimilarData);
+
+                // Update text tag
+                document.getElementById("current-diff-tag").textContent = `難度：${translateLevel(level)}`;
+
+                // Render MathJax specifically for the modified section
+                if (window.MathJax) {
+                    MathJax.typesetPromise([document.getElementById("similar-question-text").parentNode.parentNode]).then(() => {
+                        showToast(`成功生成難度：[${translateLevel(level)}] 的物理相似題！`, "check");
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("類似題生成時發生錯誤，請重試", "alert-triangle");
+            }
+        }
+
+        function translateLevel(lvl) {
+            if (lvl === 'easy') return "簡單";
+            if (lvl === 'normal') return "適中";
+            if (lvl === 'hard') return "困難";
+            return "適中";
+        }
+
+        function updateDiffButtonsUI() {
+            const btnEasy = document.getElementById("diff-easy");
+            const btnNormal = document.getElementById("diff-normal");
+            const btnHard = document.getElementById("diff-hard");
+
+            // Reset
+            [btnEasy, btnNormal, btnHard].forEach(b => {
+                b.className = "px-3 py-1 rounded-lg text-xs font-medium transition-all-300 text-slate-400 hover:text-slate-100";
+            });
+
+            // Set active
+            if (currentDifficulty === 'easy') {
+                btnEasy.className = "px-3 py-1 rounded-lg text-xs font-medium transition-all-300 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow";
+            } else if (currentDifficulty === 'normal') {
+                btnNormal.className = "px-3 py-1 rounded-lg text-xs font-medium transition-all-300 bg-slate-800 text-cyan-400 shadow";
+            } else if (currentDifficulty === 'hard') {
+                btnHard.className = "px-3 py-1 rounded-lg text-xs font-medium transition-all-300 bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow";
+            }
+        }
+
+        // Open Correction Modal
+        function openCorrectionModal() {
+            document.getElementById("correction-modal").classList.remove("hidden");
+            document.getElementById("correction-prompt").focus();
+        }
+
+        // Close Correction Modal
+        function closeCorrectionModal() {
+            document.getElementById("correction-modal").classList.add("hidden");
+            document.getElementById("correction-prompt").value = "";
+        }
+
+        // Submit Correction and recalculate
+        async function submitCorrection() {
+            const correctionText = document.getElementById("correction-prompt").value.trim();
+            if (!correctionText) {
+                showToast("請輸入欲提供給 AI 的修正提示", "alert-circle");
+                return;
+            }
+
+            const activeProblemText = document.getElementById("problem-text").value.trim() || activeSolveData.original_question_analysis;
+
+            closeCorrectionModal();
+
+            // Transition back to loading
+            document.getElementById("result-card").classList.add("hidden");
+            document.getElementById("loading-card").classList.remove("hidden");
+            document.getElementById("loading-title").textContent = "AI 科學解答自省修正中...";
+            document.getElementById("loading-desc").textContent = `正在根據提示：【${correctionText}】重新檢驗、修正所有物理公式與數值推導，請稍候。`;
+
+            try {
+                const systemPrompt = `你是一個謙虛、嚴格且專業的高中物理大師。先前可能由於計算、正負號或特定常數輸入有誤，學生已為你提供進一步的修正指南。
+你必須：
+1. 結合先前的問題與新修正提示，徹底自我檢查推導邏輯。
+2. 輸出完整且修正過後的物理步驟。
+3. 保持公式的高質感 LaTeX 雙重/四重轉義格式（例如 \\\\text{ m/s}^2 確保無損）。
+請一律以繁體中文，並以規定的 JSON 格式返回。`;
+
+                const userPrompt = `
+                原問題：
+                "${activeProblemText}"
+
+                使用者/老師給予的更正提示與要求：
+                "${correctionText}"
+
+                請以此修正提示為依歸，重新推導與計算此物理題目。並完全按照先前規定的 JSON 格式輸出：
+                {
+                    "original_question_analysis": "包含修正提示後的物理情境完整描述",
+                    "steps": [
+                        { "title": "...", "content": "..." }
+                    ],
+                    "final_answer": "修正後的最終答案（高雅 LaTeX 格式）",
+                    "chapters": ["對應章節"],
+                    "concepts": ["必備物理觀念"],
+                    "similar_question": {
+                        "question": "...",
+                        "concept_required": "...",
+                        "steps": "...",
+                        "answer": "..."
+                    }
+                }
+                `;
+
+                const payload = {
+                    contents: [{
+                        parts: [{ text: userPrompt }]
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const result = await fetchGeminiWithBackoff(payload);
+                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!responseText) throw new Error("AI 修正解算失敗。");
+
+                const parsedData = safeJsonParse(responseText);
+                activeSolveData = parsedData; // Save update to memory
+                renderSolution(parsedData);
+                showToast("AI 物理解答自我修正並重新推導成功！", "check");
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("loading-card").classList.add("hidden");
+                document.getElementById("result-card").classList.remove("hidden");
+                showToast("修正重新計算時失敗，請重試", "alert-triangle");
+            }
+        }
+
+        // Clear Q&A chatbox
+        function clearQAChat() {
+            qasHistory = [];
+            const container = document.getElementById("qa-chat-container");
+            container.innerHTML = `
+                <div id="qa-placeholder-msg" class="text-center py-8 text-xs text-slate-500 flex flex-col items-center gap-2">
+                    <i data-lucide="help-circle" class="w-8 h-8 text-slate-600"></i>
+                    <span>對此題推導、公式有任何疑問？在下方輸入，AI 物理導師將會為您解讀。</span>
+                </div>
+            `;
+            document.getElementById("qa-input-field").value = "";
+            lucide.createIcons();
+        }
+
+        // Handle Enter keypress in Q&A input
+        function handleQAPress(event) {
+            if (event.key === 'Enter') {
+                sendQAQuestion();
+            }
+        }
+
+        // Send question to AI tutor based on current steps
+        async function sendQAQuestion() {
+            const inputField = document.getElementById("qa-input-field");
+            const question = inputField.value.trim();
+            if (!question) return;
+
+            if (!activeSolveData) {
+                showToast("請先求解物理題後再進行追問哦！", "alert-circle");
+                return;
+            }
+
+            // Remove placeholder if present
+            const placeholder = document.getElementById("qa-placeholder-msg");
+            if (placeholder) placeholder.remove();
+
+            // Append User Question Bubble to Chatbox
+            const chatContainer = document.getElementById("qa-chat-container");
+            const userBubble = document.createElement("div");
+            userBubble.className = "self-end max-w-[85%] bg-indigo-600/20 text-indigo-100 border border-indigo-500/30 px-4 py-2.5 rounded-2xl text-xs rounded-tr-none flex flex-col gap-1 ml-auto shadow-md";
+            userBubble.innerHTML = `
+                <div class="flex items-center gap-1.5 justify-end text-[10px] text-indigo-400 font-bold uppercase tracking-wider">
+                    <span>學生 (您)</span>
+                    <i data-lucide="user" class="w-3 h-3"></i>
+                </div>
+                <p class="leading-relaxed select-text">${question}</p>
+            `;
+            chatContainer.appendChild(userBubble);
+            
+            // Append loading indicator for AI Tutor
+            const aiLoadingBubble = document.createElement("div");
+            aiLoadingBubble.id = "ai-qa-loading";
+            aiLoadingBubble.className = "self-start max-w-[85%] bg-slate-900 border border-slate-850 px-4 py-2.5 rounded-2xl text-xs rounded-tl-none flex items-center gap-2 mr-auto text-slate-400";
+            aiLoadingBubble.innerHTML = `
+                <div class="w-3 h-3 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin"></div>
+                <span>導師正在詳細編寫解答中...</span>
+            `;
+            chatContainer.appendChild(aiLoadingBubble);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            lucide.createIcons();
+
+            // Disable input temporary
+            inputField.value = "";
+            inputField.disabled = true;
+            document.getElementById("qa-submit-btn").disabled = true;
+
+            try {
+                const systemPrompt = `你是一個極度耐心的高中物理名師 (AI 物理導師)。
+學生對你剛才推導、解算的物理解答有疑問，請你針對學生的提問進行一對一引導。
+請遵循以下規則：
+1. 深入淺出解釋物理觀念，可以列出方程式。
+2. 保持高度客氣、鼓勵學生的教學風格。
+3. 確保回覆中的所有物理符號與單位使用正確轉義的 LaTeX (例如 $F = m \\\\cdot a$, $\\\\text{ m/s}^2$ 等)，避免 JSON 解析失敗。
+
+請用繁體中文，並完全以規定的 JSON 格式返回：
+{
+  "answer": "您的物理觀念指導解答內容（使用 LaTeX）"
+}`;
+
+                // Compile steps content to supply as context
+                const solutionContext = activeSolveData.steps.map((s, idx) => `[步驟 ${idx+1}] ${s.title}: ${s.content}`).join("\n");
+                
+                const userPrompt = `
+                【原始物理題目】
+                "${activeSolveData.original_question_analysis}"
+
+                【我們先前算出來的解答步驟】
+                ${solutionContext}
+                最終結論答案：${activeSolveData.final_answer}
+
+                【先前的問答對話歷程】
+                ${qasHistory.map(h => `學生: "${h.question}"\n導師: "${h.answer}"`).join("\n")}
+
+                【學生的最新追問】
+                "${question}"
+
+                請依照約定的 JSON 格式輸出：
+                {
+                   "answer": "詳細的追問解答..."
+                }
+                `;
+
+                const payload = {
+                    contents: [{
+                        parts: [{ text: userPrompt }]
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const result = await fetchGeminiWithBackoff(payload);
+                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!responseText) throw new Error("AI 導師分身未響應。");
+
+                const parsedResponse = safeJsonParse(responseText);
+                
+                // Save history
+                qasHistory.push({ question: question, answer: parsedResponse.answer });
+
+                // Remove loading bubble
+                aiLoadingBubble.remove();
+
+                // Append AI Answer bubble
+                const tutorBubble = document.createElement("div");
+                tutorBubble.className = "self-start max-w-[85%] bg-slate-900 border border-slate-800 px-4 py-3 rounded-2xl text-xs rounded-tl-none flex flex-col gap-1 mr-auto shadow-lg";
+                tutorBubble.innerHTML = `
+                    <div class="flex items-center gap-1.5 text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-1">
+                        <i data-lucide="sparkles" class="w-3 h-3 animate-pulse"></i>
+                        <span>AI 物理導師</span>
+                    </div>
+                    <p class="leading-relaxed text-slate-200 select-text">${parsedResponse.answer}</p>
+                `;
+                chatContainer.appendChild(tutorBubble);
+                
+                // Re-enable input
+                inputField.disabled = false;
+                document.getElementById("qa-submit-btn").disabled = false;
+                inputField.focus();
+
+                // Scroll down
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                lucide.createIcons();
+
+                // Typeset specifically the newly added bubble
+                if (window.MathJax) {
+                    MathJax.typesetPromise([tutorBubble]).then(() => {
+                        // Success typesetting QA
+                    });
+                }
+
+            } catch (err) {
+                console.error(err);
+                aiLoadingBubble.remove();
+                inputField.disabled = false;
+                document.getElementById("qa-submit-btn").disabled = false;
+                showToast("導師解析失敗，請重新提問", "alert-triangle");
+            }
+        }
+
+        // Add item to history records
+        function addToHistory(data) {
+            // Check if already exists in history list
+            const existing = historyList.find(h => h.original_question_analysis === data.original_question_analysis);
+            if (existing) return;
+
+            historyList.unshift(data); // Add to beginning
+            renderHistoryUI();
+        }
+
+        // Render History List
+        function renderHistoryUI() {
+            const container = document.getElementById("history-container");
+            container.innerHTML = "";
+
+            if (historyList.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">目前尚無歷史解題紀錄</p>`;
+                return;
+            }
+
+            historyList.forEach((hist, index) => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left bg-slate-950/40 hover:bg-slate-950 border border-slate-850 p-2.5 rounded-xl transition-all-300 text-xs flex flex-col gap-1";
+                btn.onclick = () => loadHistoryItem(index);
+                
+                // Get snippet of question
+                let textSnippet = hist.original_question_analysis;
+                if (textSnippet.length > 35) textSnippet = textSnippet.substring(0, 35) + "...";
+
+                btn.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-semibold text-indigo-400">#${historyList.length - index} 歷史物理考題</span>
+                        <span class="text-[10px] bg-slate-800 text-cyan-300 px-1.5 py-0.5 rounded border border-slate-700 font-mono">${hist.chapters[0] || "物理單元"}</span>
+                    </div>
+                    <span class="text-slate-400 block truncate">${textSnippet}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        // Load History item back to UI
+        function loadHistoryItem(index) {
+            const histData = historyList[index];
+            activeSolveData = histData;
+            clearQAChat(); // Clear QA for loaded item
+            renderSolution(histData);
+            showToast("已成功載入歷史物理題之完整解析！", "history");
+        }
+
+        // Generate Quiz by AI
+        async function generateQuiz() {
+            const range = document.getElementById("quiz-range").value;
+            const type = document.getElementById("quiz-type").value;
+            const difficulty = document.getElementById("quiz-difficulty").value;
+
+            showToast(`正在為您生成 [${range}] 的 [${difficulty}] 難度 [${type}] 原創題組...`, "loader", 3000);
+            
+            // UI state
+            document.getElementById("welcome-placeholder").classList.add("hidden");
+            document.getElementById("result-card").classList.add("hidden");
+            document.getElementById("loading-card").classList.remove("hidden");
+            document.getElementById("loading-title").textContent = "AI 科學命題大師出題中...";
+            document.getElementById("loading-desc").textContent = `正在依據台灣高中物理課綱之「${range}」範圍，設計一題難度為【${difficulty}】的原創「${type}」物理題組，並正在配置數值。`;
+
+            try {
+                const prompt = `你是一個高中物理段考與學測/分科測驗的命題大師。
+                請針對單元範圍：【${range}】，出題類型：【${type}】，題目難度：【${difficulty}】設計一道全新的物理原創題目。
+                
+                規範要求：
+                1. 題目必須合乎物理學原理、嚴謹且有清楚的物理變數和條件。
+                2. 請輸出繁體中文。
+                3. 使用合法的 JSON Schema 輸出，不要多餘的解釋或包裹。
+                
+                JSON 綱要如下：
+                {
+                    "quiz_text": "物理原創題目之完整文字描述。如果有各選項(A)(B)(C)(D)，請一併條列在題目內。"
+                }
+                請雙重轉義所有 LaTeX 字串以利解析，直接輸出該 JSON 結構。`;
+
+                const payload = {
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const result = await fetchGeminiWithBackoff(payload);
+                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!responseText) throw new Error("隨堂出題失敗");
+
+                const parsedQuiz = safeJsonParse(responseText);
+                
+                // Set into input box and load placeholder screen so student can click Solve
+                document.getElementById("problem-text").value = parsedQuiz.quiz_text;
+                removeImage(null);
+
+                // Transition back to preview
+                document.getElementById("loading-card").classList.add("hidden");
+                document.getElementById("welcome-placeholder").classList.remove("hidden");
+                showToast(`[${difficulty}] 原創題目生成成功！已自動帶入輸入框。`, "check");
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("loading-card").classList.add("hidden");
+                document.getElementById("welcome-placeholder").classList.remove("hidden");
+                showToast("自主出題失敗，請重試", "alert-triangle");
+            }
+        }
+    </script>
+</body>
+</html>
